@@ -1,0 +1,21 @@
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE files
+.vscode/
+.idea/
+
+# Ignore temporary files
+*.log
+*.tmp
+
+# Ignore node_modules if using npm
+node_modules/
+
+# Ignore server files
+server.py
+https-server.js
+*.pem
+*.key
+*.crt
