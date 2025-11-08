@@ -31,13 +31,10 @@ function initScanner() {
     const config = {
         fps: 30, // Higher FPS for better detection
         qrbox: function(viewfinderWidth, viewfinderHeight) {
-            // Make scan box responsive and wider for barcodes
-            let minEdgePercentage = 0.7;
-            let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-            let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+            // Use almost full area for scanning - much easier to scan
             return {
-                width: Math.min(qrboxSize * 1.5, viewfinderWidth - 20),
-                height: Math.min(qrboxSize * 0.5, viewfinderHeight - 20)
+                width: Math.floor(viewfinderWidth * 0.95),
+                height: Math.floor(viewfinderHeight * 0.85)
             };
         },
         rememberLastUsedCamera: true,
