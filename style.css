@@ -57,6 +57,18 @@ h1 {
     display: block;
 }
 
+.scan-tip {
+    background: #fef5e7;
+    border-left: 4px solid #f59e0b;
+    padding: 12px 15px;
+    margin: 0 auto 20px;
+    max-width: 640px;
+    border-radius: 8px;
+    text-align: left;
+    color: #744210;
+    font-size: 14px;
+}
+
 #scanner-container canvas,
 #scanner-container video {
     width: 100%;

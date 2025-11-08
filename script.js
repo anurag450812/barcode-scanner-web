@@ -27,14 +27,18 @@ function initScanner() {
         html5QrcodeScanner.clear().catch(err => console.log('Clear error:', err));
     }
     
-    // Configuration for the scanner - optimized for speed
+    // Configuration for the scanner - optimized for speed and accuracy
     const config = {
-        fps: 15, // Increased FPS for faster detection
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0,
+        fps: 20, // Increased FPS for better detection
+        qrbox: { width: 300, height: 150 }, // Wider box for barcode scanning
+        aspectRatio: 2.0, // Better for linear barcodes
         rememberLastUsedCamera: true, // Remember camera for faster subsequent scans
         videoConstraints: {
-            facingMode: { ideal: "environment" } // Prefer back camera on mobile
+            facingMode: { ideal: "environment" }, // Prefer back camera on mobile
+            focusMode: { ideal: "continuous" }, // Continuous autofocus
+            advanced: [{
+                zoom: 1.5 // Slight zoom for better focus on barcodes
+            }]
         },
         formatsToSupport: [
             Html5QrcodeSupportedFormats.QR_CODE,
@@ -47,7 +51,10 @@ function initScanner() {
             Html5QrcodeSupportedFormats.CODE_128,
             Html5QrcodeSupportedFormats.ITF,
             Html5QrcodeSupportedFormats.CODABAR
-        ]
+        ],
+        experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true // Use native barcode detector if available
+        }
     };
     
     html5QrcodeScanner = new Html5QrcodeScanner("scanner-container", config);
@@ -56,9 +63,10 @@ function initScanner() {
     isScanning = true;
     isCameraOpen = true;
     
-    // Show flash button and get video stream for flash control
+    // Show flash button, scan tip, and get video stream for flash control
     setTimeout(() => {
         document.getElementById('toggle-flash').style.display = 'inline-block';
+        document.getElementById('scan-tip').style.display = 'block';
         getVideoStream();
     }, 1000);
 }
@@ -137,6 +145,7 @@ function stopScanner() {
             currentStream = null;
             document.getElementById('scanner-container').style.display = 'none';
             document.getElementById('toggle-flash').style.display = 'none';
+            document.getElementById('scan-tip').style.display = 'none';
         }).catch(err => {
             console.error('Error stopping scanner:', err);
             isScanning = false;
