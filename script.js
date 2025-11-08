@@ -29,32 +29,40 @@ function initScanner() {
     
     // Configuration for the scanner - optimized for speed and accuracy
     const config = {
-        fps: 20, // Increased FPS for better detection
-        qrbox: { width: 300, height: 150 }, // Wider box for barcode scanning
-        aspectRatio: 2.0, // Better for linear barcodes
-        rememberLastUsedCamera: true, // Remember camera for faster subsequent scans
+        fps: 30, // Higher FPS for better detection
+        qrbox: function(viewfinderWidth, viewfinderHeight) {
+            // Make scan box responsive and wider for barcodes
+            let minEdgePercentage = 0.7;
+            let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+            let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+            return {
+                width: Math.min(qrboxSize * 1.5, viewfinderWidth - 20),
+                height: Math.min(qrboxSize * 0.5, viewfinderHeight - 20)
+            };
+        },
+        rememberLastUsedCamera: true,
         videoConstraints: {
-            facingMode: { ideal: "environment" }, // Prefer back camera on mobile
-            focusMode: { ideal: "continuous" }, // Continuous autofocus
-            advanced: [{
-                zoom: 1.5 // Slight zoom for better focus on barcodes
-            }]
+            facingMode: { ideal: "environment" },
+            focusMode: { ideal: "continuous" },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
         },
         formatsToSupport: [
-            Html5QrcodeSupportedFormats.QR_CODE,
             Html5QrcodeSupportedFormats.UPC_A,
             Html5QrcodeSupportedFormats.UPC_E,
             Html5QrcodeSupportedFormats.EAN_8,
             Html5QrcodeSupportedFormats.EAN_13,
             Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.CODE_93,
             Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_93,
+            Html5QrcodeSupportedFormats.CODABAR,
             Html5QrcodeSupportedFormats.ITF,
-            Html5QrcodeSupportedFormats.CODABAR
+            Html5QrcodeSupportedFormats.QR_CODE
         ],
         experimentalFeatures: {
-            useBarCodeDetectorIfSupported: true // Use native barcode detector if available
-        }
+            useBarCodeDetectorIfSupported: true
+        },
+        showTorchButtonIfSupported: false
     };
     
     html5QrcodeScanner = new Html5QrcodeScanner("scanner-container", config);
