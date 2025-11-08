@@ -33,6 +33,13 @@ h1 {
     margin-bottom: 30px;
 }
 
+.scanner-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
 #scanner-container {
     width: 100%;
     max-width: 640px;
@@ -99,6 +106,19 @@ h1 {
 
 .btn-info:hover {
     background: #38a169;
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.btn-warning.active {
+    background: #10b981;
 }
 
 .btn-danger {

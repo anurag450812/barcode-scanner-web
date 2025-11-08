@@ -2,6 +2,8 @@
 let barcodeList = [];
 let isScanning = false;
 let isCameraOpen = false;
+let isFlashOn = false;
+let currentStream = null;
 let html5QrcodeScanner = null;
 
 // Load saved barcodes from localStorage on page load
@@ -53,6 +55,12 @@ function initScanner() {
     html5QrcodeScanner.render(onScanSuccess, onScanError);
     isScanning = true;
     isCameraOpen = true;
+    
+    // Show flash button and get video stream for flash control
+    setTimeout(() => {
+        document.getElementById('toggle-flash').style.display = 'inline-block';
+        getVideoStream();
+    }, 1000);
 }
 
 // Success callback for barcode scan
@@ -125,12 +133,68 @@ function stopScanner() {
         html5QrcodeScanner.clear().then(() => {
             isScanning = false;
             isCameraOpen = false;
+            isFlashOn = false;
+            currentStream = null;
             document.getElementById('scanner-container').style.display = 'none';
+            document.getElementById('toggle-flash').style.display = 'none';
         }).catch(err => {
             console.error('Error stopping scanner:', err);
             isScanning = false;
             isCameraOpen = false;
+            isFlashOn = false;
+            currentStream = null;
         });
+    }
+}
+
+// Get video stream for flash control
+function getVideoStream() {
+    try {
+        const video = document.querySelector('#scanner-container video');
+        if (video && video.srcObject) {
+            currentStream = video.srcObject;
+        }
+    } catch (err) {
+        console.log('Could not get video stream:', err);
+    }
+}
+
+// Toggle flashlight/torch
+async function toggleFlash() {
+    if (!currentStream) {
+        getVideoStream();
+        if (!currentStream) {
+            showNotification('Flash not available on this device', true);
+            return;
+        }
+    }
+    
+    try {
+        const track = currentStream.getVideoTracks()[0];
+        const capabilities = track.getCapabilities();
+        
+        if (!capabilities.torch) {
+            showNotification('Flash not supported on this device', true);
+            return;
+        }
+        
+        isFlashOn = !isFlashOn;
+        
+        await track.applyConstraints({
+            advanced: [{ torch: isFlashOn }]
+        });
+        
+        const flashBtn = document.getElementById('toggle-flash');
+        if (isFlashOn) {
+            flashBtn.textContent = '🔦 Flash ON';
+            flashBtn.classList.add('active');
+        } else {
+            flashBtn.textContent = '🔦 Flash OFF';
+            flashBtn.classList.remove('active');
+        }
+    } catch (err) {
+        console.error('Error toggling flash:', err);
+        showNotification('Could not toggle flash', true);
     }
 }
 
@@ -442,6 +506,8 @@ document.getElementById('stop-scan').addEventListener('click', () => {
     document.getElementById('start-scan').style.display = 'inline-block';
     document.getElementById('stop-scan').style.display = 'none';
 });
+
+document.getElementById('toggle-flash').addEventListener('click', toggleFlash);
 
 document.getElementById('clear-list').addEventListener('click', clearAllBarcodes);
 
