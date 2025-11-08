@@ -85,6 +85,18 @@ function onScanSuccess(decodedText, decodedResult) {
     
     console.log(`Barcode detected: ${decodedText}`);
     
+    // Validate barcode - reject if it contains periods (likely misread)
+    if (decodedText.includes('.')) {
+        console.log('Rejected barcode with period:', decodedText);
+        return; // Skip this scan
+    }
+    
+    // Validate barcode - reject if too short (likely partial read)
+    if (decodedText.length < 3) {
+        console.log('Rejected too short barcode:', decodedText);
+        return; // Skip this scan
+    }
+    
     // Stop scanning
     stopScanner();
     
