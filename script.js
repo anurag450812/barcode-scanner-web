@@ -8,10 +8,18 @@ let barcodeDetector = null;
 let useNativeDetector = false;
 let videoElement = null;
 let animationId = null;
+let refreshInterval = null;
 
 // Load saved barcodes from Netlify Blobs on page load
 window.addEventListener('DOMContentLoaded', () => {
     loadBarcodes();
+    
+    // Auto-refresh every 3 seconds to sync with cloud
+    refreshInterval = setInterval(() => {
+        if (!isScanning) {
+            loadBarcodes();
+        }
+    }, 3000);
     
     // Check if native Barcode Detection API is available
     if ('BarcodeDetector' in window) {

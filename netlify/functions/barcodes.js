@@ -2,28 +2,28 @@ import { getStore } from "@netlify/blobs";
 
 export default async (req, context) => {
   const store = getStore("barcodes");
-  const userId = context.ip || "default"; // Use IP as user ID
+  const globalKey = "global-barcode-list"; // Single key for all users
   
   if (req.method === "GET") {
-    // Get barcodes for user
-    const data = await store.get(userId);
+    // Get global barcodes list
+    const data = await store.get(globalKey);
     return new Response(data || JSON.stringify([]), {
       headers: { "Content-Type": "application/json" }
     });
   }
   
   if (req.method === "POST") {
-    // Save barcodes for user
+    // Save global barcodes list
     const body = await req.text();
-    await store.set(userId, body);
+    await store.set(globalKey, body);
     return new Response(JSON.stringify({ success: true }), {
       headers: { "Content-Type": "application/json" }
     });
   }
   
   if (req.method === "DELETE") {
-    // Clear barcodes for user
-    await store.delete(userId);
+    // Clear global barcodes list
+    await store.delete(globalKey);
     return new Response(JSON.stringify({ success: true }), {
       headers: { "Content-Type": "application/json" }
     });
