@@ -1,11 +1,9 @@
 // Barcode Scanner Application with html5-qrcode
 let barcodeList = [];
 let isScanning = false;
-let isCameraOpen = false;
 let isFlashOn = false;
 let currentStream = null;
 let html5QrCode = null;
-let selectedCameraId = null;
 
 // Load saved barcodes from localStorage on page load
 window.addEventListener('DOMContentLoaded', () => {
@@ -15,40 +13,33 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // Initialize html5-qrcode barcode scanner
 async function initScanner() {
-    // Show scanner container immediately for better UX
     document.getElementById('scanner-container').style.display = 'block';
+    document.getElementById('scan-tip').style.display = 'block';
+    document.getElementById('toggle-flash').style.display = 'inline-block';
     
-    // If camera is already open, just resume scanning
-    if (isCameraOpen) {
-        isScanning = true;
+    // If already scanning, resume
+    if (html5QrCode && isScanning) {
         return;
     }
     
+    // Stop existing instance if any
     if (html5QrCode) {
         try {
             await html5QrCode.stop();
+            html5QrCode.clear();
         } catch (err) {
             console.log('Stop error:', err);
         }
     }
     
-    // Initialize Html5Qrcode instance
+    // Create new instance
     html5QrCode = new Html5Qrcode("scanner-container");
     
     try {
-        // Configuration for scanning with back camera
+        // Simple config for better performance
         const config = {
-            fps: 30,
-            qrbox: function(viewfinderWidth, viewfinderHeight) {
-                return {
-                    width: Math.floor(viewfinderWidth * 0.95),
-                    height: Math.floor(viewfinderHeight * 0.85)
-                };
-            },
-            aspectRatio: 1.777778,
-            videoConstraints: {
-                facingMode: "environment"
-            },
+            fps: 20,
+            qrbox: { width: 250, height: 250 },
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.UPC_A,
                 Html5QrcodeSupportedFormats.UPC_E,
@@ -59,13 +50,10 @@ async function initScanner() {
                 Html5QrcodeSupportedFormats.CODE_93,
                 Html5QrcodeSupportedFormats.CODABAR,
                 Html5QrcodeSupportedFormats.ITF
-            ],
-            experimentalFeatures: {
-                useBarCodeDetectorIfSupported: true
-            }
+            ]
         };
         
-        // Start scanning - facingMode is in videoConstraints
+        // Start with back camera
         await html5QrCode.start(
             { facingMode: "environment" },
             config,
@@ -74,19 +62,15 @@ async function initScanner() {
         );
         
         isScanning = true;
-        isCameraOpen = true;
         
-        // Show flash button, scan tip, and get video stream for flash control
+        // Get video stream for flash
         setTimeout(() => {
-            document.getElementById('toggle-flash').style.display = 'inline-block';
-            document.getElementById('scan-tip').style.display = 'block';
             getVideoStream();
-        }, 1000);
+        }, 500);
         
     } catch (err) {
         console.error('Error starting scanner:', err);
         alert('Error starting camera: ' + err.message);
-        stopScanner();
     }
 }
 
@@ -94,22 +78,13 @@ async function initScanner() {
 function onScanSuccess(decodedText, decodedResult) {
     if (!isScanning) return;
     
-    console.log(`Barcode detected: ${decodedText}`);
-    
-    // Validate barcode - reject if it contains periods (likely misread)
-    if (decodedText.includes('.')) {
-        console.log('Rejected barcode with period:', decodedText);
-        return; // Skip this scan
+    // Validate barcode
+    if (decodedText.includes('.') || decodedText.length < 3) {
+        return;
     }
     
-    // Validate barcode - reject if too short (likely partial read)
-    if (decodedText.length < 3) {
-        console.log('Rejected too short barcode:', decodedText);
-        return; // Skip this scan
-    }
-    
-    // Pause scanning (keep camera open)
-    pauseScanning();
+    // Stop scanning temporarily
+    isScanning = false;
     
     // Handle the scanned barcode
     handleBarcodeScan(decodedText);
@@ -126,65 +101,46 @@ function onScanError(errorMessage) {
 
 // Handle detected barcode
 function handleBarcodeScan(code) {
-    if (!isScanning || !code) return;
+    if (!code) return;
     
-    console.log('Barcode detected:', code);
-    
-    // PAUSE scanning (but keep camera open)
-    pauseScanning();
-    
-    // Display last scanned result
-    document.getElementById('last-result').textContent = code;
-    document.getElementById('result-section').style.display = 'block';
-
-    // Check if barcode already exists BEFORE adding
+    // Check if barcode already exists
     const exists = barcodeList.some(item => item.code === code);
     
     if (!exists) {
-        // New barcode - add it
         addBarcode(code);
-        
-        // Play success beep sound
         playBeep();
-        
-        // Show success notification
         showNotification('✅ Barcode Saved! Click "Scan Next" to continue.', false);
     } else {
-        // Duplicate barcode
         playDenialSound();
         showNotification('❌ ALREADY SCANNED! This barcode is already in your list.', true);
     }
     
-    // Update UI buttons
+    // Update UI
     document.getElementById('start-scan').textContent = 'Scan Next';
-    document.getElementById('start-scan').style.display = 'inline-block';
-    document.getElementById('stop-scan').style.display = 'none';
 }
 
-// Pause scanning (keep camera open)
-function pauseScanning() {
-    isScanning = false;
+// Resume scanning
+function resumeScanning() {
+    isScanning = true;
+    document.getElementById('start-scan').textContent = 'Pause';
 }
 
-// Stop the scanner (close camera completely)
+// Stop the scanner
 async function stopScanner() {
-    if (html5QrCode && isCameraOpen) {
+    if (html5QrCode) {
         try {
             await html5QrCode.stop();
-            isScanning = false;
-            isCameraOpen = false;
-            isFlashOn = false;
-            currentStream = null;
-            document.getElementById('scanner-container').style.display = 'none';
-            document.getElementById('toggle-flash').style.display = 'none';
-            document.getElementById('scan-tip').style.display = 'none';
+            html5QrCode.clear();
         } catch (err) {
             console.error('Error stopping scanner:', err);
-            isScanning = false;
-            isCameraOpen = false;
-            isFlashOn = false;
-            currentStream = null;
         }
+        html5QrCode = null;
+        isScanning = false;
+        isFlashOn = false;
+        currentStream = null;
+        document.getElementById('scanner-container').style.display = 'none';
+        document.getElementById('toggle-flash').style.display = 'none';
+        document.getElementById('scan-tip').style.display = 'none';
     }
 }
 
@@ -517,35 +473,20 @@ function showNotification(message, isError = false) {
 
 // Event Listeners
 document.getElementById('start-scan').addEventListener('click', () => {
-    // Disable button and show loading state immediately
     const startBtn = document.getElementById('start-scan');
-    const stopBtn = document.getElementById('stop-scan');
     
-    if (!isCameraOpen) {
-        startBtn.disabled = true;
-        startBtn.textContent = 'Starting...';
-        
-        // Small delay to allow UI update
-        setTimeout(() => {
-            initScanner();
-            startBtn.disabled = false;
-            startBtn.textContent = 'Scan Next';
-            startBtn.style.display = 'none';
-            stopBtn.style.display = 'inline-block';
-        }, 100);
+    if (startBtn.textContent === 'Scan Next') {
+        // Resume scanning
+        resumeScanning();
     } else {
-        // Camera already open, just resume scanning
+        // Start new scan
         initScanner();
-        startBtn.textContent = 'Scan Next';
-        startBtn.style.display = 'none';
-        stopBtn.style.display = 'inline-block';
     }
 });
 
 document.getElementById('stop-scan').addEventListener('click', () => {
     stopScanner();
-    document.getElementById('start-scan').style.display = 'inline-block';
-    document.getElementById('stop-scan').style.display = 'none';
+    document.getElementById('start-scan').textContent = 'Start Scan';
 });
 
 document.getElementById('toggle-flash').addEventListener('click', toggleFlash);
