@@ -4,7 +4,8 @@ let isScanning = false;
 let isCameraOpen = false;
 let isFlashOn = false;
 let currentStream = null;
-let html5QrcodeScanner = null;
+let html5QrCode = null;
+let selectedCameraId = null;
 
 // Load saved barcodes from localStorage on page load
 window.addEventListener('DOMContentLoaded', () => {
@@ -13,7 +14,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // Initialize html5-qrcode barcode scanner
-function initScanner() {
+async function initScanner() {
     // Show scanner container immediately for better UX
     document.getElementById('scanner-container').style.display = 'block';
     
@@ -23,59 +24,93 @@ function initScanner() {
         return;
     }
     
-    if (html5QrcodeScanner) {
-        html5QrcodeScanner.clear().catch(err => console.log('Clear error:', err));
+    if (html5QrCode) {
+        try {
+            await html5QrCode.stop();
+        } catch (err) {
+            console.log('Stop error:', err);
+        }
     }
     
-    // Configuration for the scanner - optimized for 1D barcodes only
-    const config = {
-        fps: 30, // Higher FPS for better detection
-        qrbox: function(viewfinderWidth, viewfinderHeight) {
-            // Use almost full area for scanning - much easier to scan
-            return {
-                width: Math.floor(viewfinderWidth * 0.95),
-                height: Math.floor(viewfinderHeight * 0.85)
-            };
-        },
-        aspectRatio: 1.777778, // 16:9 aspect ratio for full camera area
-        rememberLastUsedCamera: true,
-        videoConstraints: {
-            facingMode: { ideal: "environment" },
-            focusMode: { ideal: "continuous" },
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-        },
-        // Only 1D barcode formats - no QR codes
-        formatsToSupport: [
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_93,
-            Html5QrcodeSupportedFormats.CODABAR,
-            Html5QrcodeSupportedFormats.ITF
-        ],
-        experimentalFeatures: {
-            useBarCodeDetectorIfSupported: true
-        },
-        showTorchButtonIfSupported: false,
-        disableFlip: false // Use full camera area
-    };
+    // Initialize Html5Qrcode instance
+    html5QrCode = new Html5Qrcode("scanner-container");
     
-    html5QrcodeScanner = new Html5QrcodeScanner("scanner-container", config);
-    
-    html5QrcodeScanner.render(onScanSuccess, onScanError);
-    isScanning = true;
-    isCameraOpen = true;
-    
-    // Show flash button, scan tip, and get video stream for flash control
-    setTimeout(() => {
-        document.getElementById('toggle-flash').style.display = 'inline-block';
-        document.getElementById('scan-tip').style.display = 'block';
-        getVideoStream();
-    }, 1000);
+    try {
+        // Get all cameras
+        const devices = await Html5Qrcode.getCameras();
+        
+        if (!devices || devices.length === 0) {
+            alert('No camera found on this device');
+            return;
+        }
+        
+        // Find back camera (environment facing)
+        let cameraId = devices[0].id; // Default to first camera
+        
+        for (const device of devices) {
+            const label = device.label.toLowerCase();
+            if (label.includes('back') || label.includes('rear') || label.includes('environment')) {
+                cameraId = device.id;
+                break;
+            }
+        }
+        
+        selectedCameraId = cameraId;
+        
+        // Configuration for scanning
+        const config = {
+            fps: 30,
+            qrbox: function(viewfinderWidth, viewfinderHeight) {
+                return {
+                    width: Math.floor(viewfinderWidth * 0.95),
+                    height: Math.floor(viewfinderHeight * 0.85)
+                };
+            },
+            aspectRatio: 1.777778,
+            videoConstraints: {
+                focusMode: { ideal: "continuous" },
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            },
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.UPC_E,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.CODE_93,
+                Html5QrcodeSupportedFormats.CODABAR,
+                Html5QrcodeSupportedFormats.ITF
+            ],
+            experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true
+            }
+        };
+        
+        // Start scanning with selected camera
+        await html5QrCode.start(
+            cameraId,
+            config,
+            onScanSuccess,
+            onScanError
+        );
+        
+        isScanning = true;
+        isCameraOpen = true;
+        
+        // Show flash button, scan tip, and get video stream for flash control
+        setTimeout(() => {
+            document.getElementById('toggle-flash').style.display = 'inline-block';
+            document.getElementById('scan-tip').style.display = 'block';
+            getVideoStream();
+        }, 1000);
+        
+    } catch (err) {
+        console.error('Error starting scanner:', err);
+        alert('Error starting camera: ' + err.message);
+        stopScanner();
+    }
 }
 
 // Success callback for barcode scan
@@ -96,8 +131,8 @@ function onScanSuccess(decodedText, decodedResult) {
         return; // Skip this scan
     }
     
-    // Stop scanning
-    stopScanner();
+    // Pause scanning (keep camera open)
+    pauseScanning();
     
     // Handle the scanned barcode
     handleBarcodeScan(decodedText);
@@ -107,7 +142,7 @@ function onScanSuccess(decodedText, decodedResult) {
 function onScanError(errorMessage) {
     // Ignore "not found" errors as they're normal when no barcode is in view
     // Only log actual errors
-    if (!errorMessage.includes('NotFoundException')) {
+    if (!errorMessage.includes('NotFoundException') && !errorMessage.includes('No MultiFormat Readers')) {
         console.log(`Scan error: ${errorMessage}`);
     }
 }
@@ -155,9 +190,10 @@ function pauseScanning() {
 }
 
 // Stop the scanner (close camera completely)
-function stopScanner() {
-    if (html5QrcodeScanner && isCameraOpen) {
-        html5QrcodeScanner.clear().then(() => {
+async function stopScanner() {
+    if (html5QrCode && isCameraOpen) {
+        try {
+            await html5QrCode.stop();
             isScanning = false;
             isCameraOpen = false;
             isFlashOn = false;
@@ -165,13 +201,13 @@ function stopScanner() {
             document.getElementById('scanner-container').style.display = 'none';
             document.getElementById('toggle-flash').style.display = 'none';
             document.getElementById('scan-tip').style.display = 'none';
-        }).catch(err => {
+        } catch (err) {
             console.error('Error stopping scanner:', err);
             isScanning = false;
             isCameraOpen = false;
             isFlashOn = false;
             currentStream = null;
-        });
+        }
     }
 }
 
