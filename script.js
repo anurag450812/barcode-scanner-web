@@ -81,7 +81,7 @@ async function initScanner() {
         
         // Config optimized for fast scanning
         const config = {
-            fps: 60,
+            fps: 30,
             qrbox: function(viewfinderWidth, viewfinderHeight) {
                 // Use 90% of available space for scanning
                 return {
@@ -90,11 +90,6 @@ async function initScanner() {
                 };
             },
             aspectRatio: 1.777778,
-            videoConstraints: {
-                width: { ideal: 1920 },
-                height: { ideal: 1080 },
-                facingMode: { ideal: "environment" }
-            },
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.UPC_A,
                 Html5QrcodeSupportedFormats.UPC_E,
@@ -105,10 +100,7 @@ async function initScanner() {
                 Html5QrcodeSupportedFormats.CODE_93,
                 Html5QrcodeSupportedFormats.CODABAR,
                 Html5QrcodeSupportedFormats.ITF
-            ],
-            experimentalFeatures: {
-                useBarCodeDetectorIfSupported: true
-            }
+            ]
         };
         
         // Start with back camera ID
