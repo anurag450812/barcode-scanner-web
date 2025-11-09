@@ -14,11 +14,13 @@ window.addEventListener('DOMContentLoaded', () => {
 // Initialize html5-qrcode barcode scanner
 async function initScanner() {
     document.getElementById('scanner-container').style.display = 'block';
-    document.getElementById('scan-tip').style.display = 'block';
-    document.getElementById('toggle-flash').style.display = 'inline-block';
+    document.getElementById('loading-message').style.display = 'block';
+    document.getElementById('scan-tip').style.display = 'none';
+    document.getElementById('toggle-flash').style.display = 'none';
     
     // If already scanning, resume
     if (html5QrCode && isScanning) {
+        document.getElementById('loading-message').style.display = 'none';
         return;
     }
     
@@ -114,6 +116,11 @@ async function initScanner() {
         
         isScanning = true;
         
+        // Hide loading, show UI elements
+        document.getElementById('loading-message').style.display = 'none';
+        document.getElementById('scan-tip').style.display = 'block';
+        document.getElementById('toggle-flash').style.display = 'inline-block';
+        
         // Get video stream for flash
         setTimeout(() => {
             getVideoStream();
@@ -121,6 +128,7 @@ async function initScanner() {
         
     } catch (err) {
         console.error('Error starting scanner:', err);
+        document.getElementById('loading-message').style.display = 'none';
         alert('Error starting camera: ' + err.message);
     }
 }
