@@ -4,7 +4,6 @@ let isScanning = false;
 let isFlashOn = false;
 let currentStream = null;
 let html5QrCode = null;
-let useFrontCamera = false; // Track which camera to use
 
 // Load saved barcodes from localStorage on page load
 window.addEventListener('DOMContentLoaded', () => {
@@ -17,7 +16,6 @@ async function initScanner() {
     document.getElementById('scanner-container').style.display = 'block';
     document.getElementById('scan-tip').style.display = 'block';
     document.getElementById('toggle-flash').style.display = 'inline-block';
-    document.getElementById('switch-camera').style.display = 'inline-block';
     
     // If already scanning, resume
     if (html5QrCode && isScanning) {
@@ -38,8 +36,48 @@ async function initScanner() {
     html5QrCode = new Html5Qrcode("scanner-container");
     
     try {
-        // Determine which camera to use
-        const facingMode = useFrontCamera ? "user" : "environment";
+        // Get all available cameras
+        const devices = await Html5Qrcode.getCameras();
+        
+        if (!devices || devices.length === 0) {
+            alert('No camera found on this device');
+            return;
+        }
+        
+        // Find the camera with highest resolution
+        let selectedCamera = devices[0];
+        
+        for (const device of devices) {
+            // Try to get capabilities for each camera
+            try {
+                const constraints = { video: { deviceId: device.id } };
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                const track = stream.getVideoTracks()[0];
+                const capabilities = track.getCapabilities();
+                
+                // Check if this camera has higher resolution
+                if (capabilities.width && capabilities.height) {
+                    const currentMaxPixels = (capabilities.width.max || 0) * (capabilities.height.max || 0);
+                    const selectedConstraints = { video: { deviceId: selectedCamera.id } };
+                    const selectedStream = await navigator.mediaDevices.getUserMedia(selectedConstraints);
+                    const selectedTrack = selectedStream.getVideoTracks()[0];
+                    const selectedCapabilities = selectedTrack.getCapabilities();
+                    const selectedMaxPixels = (selectedCapabilities.width?.max || 0) * (selectedCapabilities.height?.max || 0);
+                    
+                    if (currentMaxPixels > selectedMaxPixels) {
+                        selectedCamera = device;
+                    }
+                    
+                    selectedStream.getTracks().forEach(t => t.stop());
+                }
+                
+                stream.getTracks().forEach(t => t.stop());
+            } catch (err) {
+                console.log('Could not check camera capabilities:', err);
+            }
+        }
+        
+        console.log('Selected highest resolution camera:', selectedCamera.label);
         
         // Config with full resolution scanning
         const config = {
@@ -53,7 +91,6 @@ async function initScanner() {
             },
             aspectRatio: 1.777778,
             videoConstraints: {
-                facingMode: { exact: facingMode },
                 width: { ideal: 4096 },
                 height: { ideal: 2160 }
             },
@@ -70,9 +107,9 @@ async function initScanner() {
             ]
         };
         
-        // Start with selected camera (back or front)
+        // Start with highest resolution camera
         await html5QrCode.start(
-            { facingMode: facingMode },
+            selectedCamera.id,
             config,
             onScanSuccess,
             onScanError
@@ -157,7 +194,6 @@ async function stopScanner() {
         currentStream = null;
         document.getElementById('scanner-container').style.display = 'none';
         document.getElementById('toggle-flash').style.display = 'none';
-        document.getElementById('switch-camera').style.display = 'none';
         document.getElementById('scan-tip').style.display = 'none';
     }
 }
@@ -210,33 +246,6 @@ async function toggleFlash() {
     } catch (err) {
         console.error('Error toggling flash:', err);
         showNotification('Could not toggle flash', true);
-    }
-}
-
-// Switch between front and back camera
-async function switchCamera() {
-    if (!html5QrCode) return;
-    
-    try {
-        // Stop current camera
-        await html5QrCode.stop();
-        html5QrCode.clear();
-        html5QrCode = null;
-        isScanning = false;
-        
-        // Toggle camera
-        useFrontCamera = !useFrontCamera;
-        
-        // Small delay to ensure camera is released
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        // Restart with new camera
-        await initScanner();
-        
-        showNotification(`Switched to ${useFrontCamera ? 'front' : 'back'} camera`, false);
-    } catch (err) {
-        console.error('Error switching camera:', err);
-        showNotification('Could not switch camera', true);
     }
 }
 
@@ -535,8 +544,6 @@ document.getElementById('stop-scan').addEventListener('click', () => {
 });
 
 document.getElementById('toggle-flash').addEventListener('click', toggleFlash);
-
-document.getElementById('switch-camera').addEventListener('click', switchCamera);
 
 document.getElementById('clear-list').addEventListener('click', clearAllBarcodes);
 
