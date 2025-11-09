@@ -30,20 +30,19 @@ h1 {
 /* Tab Navigation */
 .tab-navigation {
     display: flex;
-    gap: 10px;
-    margin-bottom: 30px;
+    gap: 8px;
+    margin-bottom: 20px;
     background: rgba(255, 255, 255, 0.1);
-    padding: 10px;
-    border-radius: 12px;
+    padding: 6px;
+    border-radius: 10px;
 }
 
 .tab-btn {
     flex: 1;
-    padding: 15px 30px;
+    padding: 12px 20px;
     border: none;
     border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 24px;
     cursor: pointer;
     background: rgba(255, 255, 255, 0.1);
     color: white;
@@ -52,12 +51,12 @@ h1 {
 
 .tab-btn:hover {
     background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
+    transform: scale(1.05);
 }
 
 .tab-btn.active {
     background: #667eea;
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 /* Tab Content */
@@ -246,23 +245,29 @@ h1 {
 
 /* Search Section */
 .search-section {
-    margin-bottom: 30px;
-    display: flex;
-    gap: 10px;
+    margin-bottom: 25px;
 }
 
 #search-input {
-    flex: 1;
-    padding: 12px 20px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
+    width: 100%;
+    padding: 14px 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
     font-size: 16px;
-    transition: border-color 0.3s ease;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+#search-input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
 }
 
 #search-input:focus {
     outline: none;
     border-color: #667eea;
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
 }
 
 /* List Section */

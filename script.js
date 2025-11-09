@@ -747,18 +747,8 @@ document.getElementById('clear-list').addEventListener('click', clearAllBarcodes
 
 document.getElementById('delete-selected').addEventListener('click', deleteSelectedBarcodes);
 
-document.getElementById('search-btn').addEventListener('click', searchBarcode);
-
-// Auto-search as user types
-document.getElementById('search-input').addEventListener('input', (e) => {
-    searchBarcode();
-});
-
-document.getElementById('search-input').addEventListener('keyup', (e) => {
-    if (e.key === 'Enter') {
-        searchBarcode();
-    }
-});
+// Real-time search as user types
+document.getElementById('search-input').addEventListener('input', searchBarcode);
 
 // Tab switching functionality
 function switchTab(tabName) {
