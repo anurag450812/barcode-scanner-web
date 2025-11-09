@@ -4,6 +4,7 @@ let isScanning = false;
 let isFlashOn = false;
 let currentStream = null;
 let html5QrCode = null;
+let useFrontCamera = false; // Track which camera to use
 
 // Load saved barcodes from localStorage on page load
 window.addEventListener('DOMContentLoaded', () => {
@@ -16,6 +17,7 @@ async function initScanner() {
     document.getElementById('scanner-container').style.display = 'block';
     document.getElementById('scan-tip').style.display = 'block';
     document.getElementById('toggle-flash').style.display = 'inline-block';
+    document.getElementById('switch-camera').style.display = 'inline-block';
     
     // If already scanning, resume
     if (html5QrCode && isScanning) {
@@ -64,9 +66,10 @@ async function initScanner() {
             ]
         };
         
-        // Start with back camera
+        // Start with selected camera (back or front)
+        const facingMode = useFrontCamera ? "user" : "environment";
         await html5QrCode.start(
-            { facingMode: "environment" },
+            { facingMode: facingMode },
             config,
             onScanSuccess,
             onScanError
@@ -151,6 +154,7 @@ async function stopScanner() {
         currentStream = null;
         document.getElementById('scanner-container').style.display = 'none';
         document.getElementById('toggle-flash').style.display = 'none';
+        document.getElementById('switch-camera').style.display = 'none';
         document.getElementById('scan-tip').style.display = 'none';
     }
 }
@@ -203,6 +207,28 @@ async function toggleFlash() {
     } catch (err) {
         console.error('Error toggling flash:', err);
         showNotification('Could not toggle flash', true);
+    }
+}
+
+// Switch between front and back camera
+async function switchCamera() {
+    if (!html5QrCode) return;
+    
+    try {
+        // Stop current camera
+        await html5QrCode.stop();
+        html5QrCode.clear();
+        
+        // Toggle camera
+        useFrontCamera = !useFrontCamera;
+        
+        // Restart with new camera
+        await initScanner();
+        
+        showNotification(`Switched to ${useFrontCamera ? 'front' : 'back'} camera`, false);
+    } catch (err) {
+        console.error('Error switching camera:', err);
+        showNotification('Could not switch camera', true);
     }
 }
 
@@ -501,6 +527,8 @@ document.getElementById('stop-scan').addEventListener('click', () => {
 });
 
 document.getElementById('toggle-flash').addEventListener('click', toggleFlash);
+
+document.getElementById('switch-camera').addEventListener('click', switchCamera);
 
 document.getElementById('clear-list').addEventListener('click', clearAllBarcodes);
 
