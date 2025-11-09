@@ -108,9 +108,7 @@ async function initScanner() {
             ],
             experimentalFeatures: {
                 useBarCodeDetectorIfSupported: true
-            },
-            rememberLastUsedCamera: false,
-            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+            }
         };
         
         // Start with back camera ID
