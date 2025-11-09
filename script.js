@@ -36,27 +36,6 @@ async function initScanner() {
     html5QrCode = new Html5Qrcode("scanner-container");
     
     try {
-        // Get all cameras
-        const devices = await Html5Qrcode.getCameras();
-        
-        if (!devices || devices.length === 0) {
-            alert('No camera found on this device');
-            return;
-        }
-        
-        // Find back camera (environment facing)
-        let cameraId = devices[0].id; // Default to first camera
-        
-        for (const device of devices) {
-            const label = device.label.toLowerCase();
-            if (label.includes('back') || label.includes('rear') || label.includes('environment')) {
-                cameraId = device.id;
-                break;
-            }
-        }
-        
-        selectedCameraId = cameraId;
-        
         // Configuration for scanning
         const config = {
             fps: 30,
@@ -67,12 +46,6 @@ async function initScanner() {
                 };
             },
             aspectRatio: 1.777778,
-            videoConstraints: {
-                facingMode: { exact: "environment" },
-                focusMode: { ideal: "continuous" },
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
-            },
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.UPC_A,
                 Html5QrcodeSupportedFormats.UPC_E,
@@ -89,9 +62,9 @@ async function initScanner() {
             }
         };
         
-        // Start scanning with selected camera
+        // Start scanning with back camera using facingMode
         await html5QrCode.start(
-            cameraId,
+            { facingMode: "environment" },
             config,
             onScanSuccess,
             onScanError
