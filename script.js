@@ -36,7 +36,7 @@ async function initScanner() {
     html5QrCode = new Html5Qrcode("scanner-container");
     
     try {
-        // Configuration for scanning
+        // Configuration for scanning with back camera
         const config = {
             fps: 30,
             qrbox: function(viewfinderWidth, viewfinderHeight) {
@@ -46,6 +46,9 @@ async function initScanner() {
                 };
             },
             aspectRatio: 1.777778,
+            videoConstraints: {
+                facingMode: "environment"
+            },
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.UPC_A,
                 Html5QrcodeSupportedFormats.UPC_E,
@@ -62,7 +65,7 @@ async function initScanner() {
             }
         };
         
-        // Start scanning with back camera using facingMode
+        // Start scanning - facingMode is in videoConstraints
         await html5QrCode.start(
             { facingMode: "environment" },
             config,
