@@ -116,15 +116,26 @@ async function initScanner() {
         
         isScanning = true;
         
-        // Hide loading, show UI elements
-        document.getElementById('loading-message').style.display = 'none';
-        document.getElementById('scan-tip').style.display = 'block';
-        document.getElementById('toggle-flash').style.display = 'inline-block';
-        
-        // Get video stream for flash
+        // Wait for video stream to be fully ready before hiding loading
         setTimeout(() => {
-            getVideoStream();
-        }, 500);
+            // Ensure video element is ready
+            const video = document.querySelector('#scanner-container video');
+            if (video && video.readyState >= 2) {
+                // Video is ready
+                document.getElementById('loading-message').style.display = 'none';
+                document.getElementById('scan-tip').style.display = 'block';
+                document.getElementById('toggle-flash').style.display = 'inline-block';
+                getVideoStream();
+            } else {
+                // Wait a bit more and check again
+                setTimeout(() => {
+                    document.getElementById('loading-message').style.display = 'none';
+                    document.getElementById('scan-tip').style.display = 'block';
+                    document.getElementById('toggle-flash').style.display = 'inline-block';
+                    getVideoStream();
+                }, 1000);
+            }
+        }, 1500);
         
     } catch (err) {
         console.error('Error starting scanner:', err);
