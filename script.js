@@ -9,10 +9,9 @@ let useNativeDetector = false;
 let videoElement = null;
 let animationId = null;
 
-// Load saved barcodes from localStorage on page load
+// Load saved barcodes from Netlify Blobs on page load
 window.addEventListener('DOMContentLoaded', () => {
     loadBarcodes();
-    updateDisplay();
     
     // Check if native Barcode Detection API is available
     if ('BarcodeDetector' in window) {
@@ -311,10 +310,12 @@ function handleBarcodeScan(code) {
     const exists = barcodeList.some(item => item.code === code);
     
     if (!exists) {
-        addBarcode(code);
+        // Play sound immediately for instant feedback
         playBeep();
+        addBarcode(code);
         showNotification('✅ Barcode Saved! Click "Scan Next" to continue.', false);
     } else {
+        // Play denial sound immediately
         playDenialSound();
         showNotification('❌ ALREADY SCANNED! This barcode is already in your list.', true);
     }
@@ -599,16 +600,31 @@ function updateDisplay() {
     }
 }
 
-// Save to localStorage
-function saveBarcodes() {
-    localStorage.setItem('barcodeList', JSON.stringify(barcodeList));
+// Save to Netlify Blobs
+async function saveBarcodes() {
+    try {
+        await fetch('/api/barcodes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(barcodeList)
+        });
+    } catch (err) {
+        console.error('Error saving barcodes:', err);
+    }
 }
 
-// Load from localStorage
-function loadBarcodes() {
-    const saved = localStorage.getItem('barcodeList');
-    if (saved) {
-        barcodeList = JSON.parse(saved);
+// Load from Netlify Blobs
+async function loadBarcodes() {
+    try {
+        const response = await fetch('/api/barcodes');
+        if (response.ok) {
+            const data = await response.json();
+            barcodeList = data || [];
+            updateDisplay();
+        }
+    } catch (err) {
+        console.error('Error loading barcodes:', err);
+        barcodeList = [];
     }
 }
 
