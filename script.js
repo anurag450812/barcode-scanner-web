@@ -38,6 +38,9 @@ async function initScanner() {
     html5QrCode = new Html5Qrcode("scanner-container");
     
     try {
+        // Determine which camera to use
+        const facingMode = useFrontCamera ? "user" : "environment";
+        
         // Config with full resolution scanning
         const config = {
             fps: 20,
@@ -50,6 +53,7 @@ async function initScanner() {
             },
             aspectRatio: 1.777778,
             videoConstraints: {
+                facingMode: { exact: facingMode },
                 width: { ideal: 4096 },
                 height: { ideal: 2160 }
             },
@@ -67,7 +71,6 @@ async function initScanner() {
         };
         
         // Start with selected camera (back or front)
-        const facingMode = useFrontCamera ? "user" : "environment";
         await html5QrCode.start(
             { facingMode: facingMode },
             config,
