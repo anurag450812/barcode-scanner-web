@@ -76,13 +76,12 @@ async function initScanner() {
             console.log('Using first camera:', backCamera.label);
         }
         
-        // Show selected camera on screen
-        cameraInfo += `\nSelected: ${backCamera.label}`;
-        alert(cameraInfo);
+        // Log selected camera (removed alert for faster startup)
+        console.log('Selected camera:', backCamera.label);
         
-        // Config optimized for smooth performance
+        // Config optimized for fast scanning
         const config = {
-            fps: 30,
+            fps: 60,
             qrbox: function(viewfinderWidth, viewfinderHeight) {
                 // Use 90% of available space for scanning
                 return {
@@ -106,7 +105,12 @@ async function initScanner() {
                 Html5QrcodeSupportedFormats.CODE_93,
                 Html5QrcodeSupportedFormats.CODABAR,
                 Html5QrcodeSupportedFormats.ITF
-            ]
+            ],
+            experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true
+            },
+            rememberLastUsedCamera: false,
+            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
         };
         
         // Start with back camera ID
