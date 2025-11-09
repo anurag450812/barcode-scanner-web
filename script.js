@@ -749,15 +749,13 @@ document.getElementById('delete-selected').addEventListener('click', deleteSelec
 
 document.getElementById('search-btn').addEventListener('click', searchBarcode);
 
+// Auto-search as user types
+document.getElementById('search-input').addEventListener('input', (e) => {
+    searchBarcode();
+});
+
 document.getElementById('search-input').addEventListener('keyup', (e) => {
     if (e.key === 'Enter') {
         searchBarcode();
-    }
-});
-
-// Clear search and show all when search input is cleared
-document.getElementById('search-input').addEventListener('input', (e) => {
-    if (e.target.value === '') {
-        updateDisplay();
     }
 });
