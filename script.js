@@ -36,34 +36,6 @@ async function initScanner() {
     html5QrCode = new Html5Qrcode("scanner-container");
     
     try {
-        // Get all available cameras
-        const devices = await Html5Qrcode.getCameras();
-        
-        if (!devices || devices.length === 0) {
-            alert('No camera found on this device');
-            return;
-        }
-        
-        console.log('Available cameras:', devices.map(d => d.label));
-        
-        // First, try to find back/rear/environment camera
-        let selectedCamera = null;
-        
-        for (const device of devices) {
-            const label = device.label.toLowerCase();
-            if (label.includes('back') || label.includes('rear') || label.includes('environment')) {
-                selectedCamera = device;
-                console.log('Found back camera:', device.label);
-                break;
-            }
-        }
-        
-        // If no back camera found, use first available
-        if (!selectedCamera) {
-            selectedCamera = devices[0];
-            console.log('No back camera found, using:', selectedCamera.label);
-        }
-        
         // Config with full resolution scanning
         const config = {
             fps: 20,
@@ -75,10 +47,6 @@ async function initScanner() {
                 };
             },
             aspectRatio: 1.777778,
-            videoConstraints: {
-                width: { ideal: 4096 },
-                height: { ideal: 2160 }
-            },
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.UPC_A,
                 Html5QrcodeSupportedFormats.UPC_E,
@@ -92,9 +60,9 @@ async function initScanner() {
             ]
         };
         
-        // Start with highest resolution camera
+        // Start with back camera using facingMode (most reliable method)
         await html5QrCode.start(
-            selectedCamera.id,
+            { facingMode: "environment" },
             config,
             onScanSuccess,
             onScanError
