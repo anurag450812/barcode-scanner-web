@@ -80,9 +80,9 @@ async function initScanner() {
         cameraInfo += `\nSelected: ${backCamera.label}`;
         alert(cameraInfo);
         
-        // Config with full resolution scanning
+        // Config optimized for smooth performance
         const config = {
-            fps: 20,
+            fps: 30,
             qrbox: function(viewfinderWidth, viewfinderHeight) {
                 // Use 90% of available space for scanning
                 return {
@@ -92,8 +92,8 @@ async function initScanner() {
             },
             aspectRatio: 1.777778,
             videoConstraints: {
-                width: { ideal: 4096 },
-                height: { ideal: 2160 },
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
                 facingMode: { ideal: "environment" }
             },
             formatsToSupport: [
