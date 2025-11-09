@@ -218,9 +218,14 @@ async function switchCamera() {
         // Stop current camera
         await html5QrCode.stop();
         html5QrCode.clear();
+        html5QrCode = null;
+        isScanning = false;
         
         // Toggle camera
         useFrontCamera = !useFrontCamera;
+        
+        // Small delay to ensure camera is released
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         // Restart with new camera
         await initScanner();
