@@ -27,7 +27,7 @@ function initScanner() {
         html5QrcodeScanner.clear().catch(err => console.log('Clear error:', err));
     }
     
-    // Configuration for the scanner - optimized for speed and accuracy
+    // Configuration for the scanner - optimized for 1D barcodes only
     const config = {
         fps: 30, // Higher FPS for better detection
         qrbox: function(viewfinderWidth, viewfinderHeight) {
@@ -37,6 +37,7 @@ function initScanner() {
                 height: Math.floor(viewfinderHeight * 0.85)
             };
         },
+        aspectRatio: 1.777778, // 16:9 aspect ratio for full camera area
         rememberLastUsedCamera: true,
         videoConstraints: {
             facingMode: { ideal: "environment" },
@@ -44,6 +45,7 @@ function initScanner() {
             width: { ideal: 1920 },
             height: { ideal: 1080 }
         },
+        // Only 1D barcode formats - no QR codes
         formatsToSupport: [
             Html5QrcodeSupportedFormats.UPC_A,
             Html5QrcodeSupportedFormats.UPC_E,
@@ -53,13 +55,13 @@ function initScanner() {
             Html5QrcodeSupportedFormats.CODE_128,
             Html5QrcodeSupportedFormats.CODE_93,
             Html5QrcodeSupportedFormats.CODABAR,
-            Html5QrcodeSupportedFormats.ITF,
-            Html5QrcodeSupportedFormats.QR_CODE
+            Html5QrcodeSupportedFormats.ITF
         ],
         experimentalFeatures: {
             useBarCodeDetectorIfSupported: true
         },
-        showTorchButtonIfSupported: false
+        showTorchButtonIfSupported: false,
+        disableFlip: false // Use full camera area
     };
     
     html5QrcodeScanner = new Html5QrcodeScanner("scanner-container", config);
