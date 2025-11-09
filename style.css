@@ -254,19 +254,19 @@ h1 {
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 10px;
     font-size: 16px;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: rgba(255, 255, 255, 0.9);
+    color: #1a202c;
     transition: all 0.3s ease;
 }
 
 #search-input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(0, 0, 0, 0.5);
 }
 
 #search-input:focus {
     outline: none;
     border-color: #667eea;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 1);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
 }
 
