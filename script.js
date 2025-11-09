@@ -44,40 +44,25 @@ async function initScanner() {
             return;
         }
         
-        // Find the camera with highest resolution
-        let selectedCamera = devices[0];
+        console.log('Available cameras:', devices.map(d => d.label));
+        
+        // First, try to find back/rear/environment camera
+        let selectedCamera = null;
         
         for (const device of devices) {
-            // Try to get capabilities for each camera
-            try {
-                const constraints = { video: { deviceId: device.id } };
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                const track = stream.getVideoTracks()[0];
-                const capabilities = track.getCapabilities();
-                
-                // Check if this camera has higher resolution
-                if (capabilities.width && capabilities.height) {
-                    const currentMaxPixels = (capabilities.width.max || 0) * (capabilities.height.max || 0);
-                    const selectedConstraints = { video: { deviceId: selectedCamera.id } };
-                    const selectedStream = await navigator.mediaDevices.getUserMedia(selectedConstraints);
-                    const selectedTrack = selectedStream.getVideoTracks()[0];
-                    const selectedCapabilities = selectedTrack.getCapabilities();
-                    const selectedMaxPixels = (selectedCapabilities.width?.max || 0) * (selectedCapabilities.height?.max || 0);
-                    
-                    if (currentMaxPixels > selectedMaxPixels) {
-                        selectedCamera = device;
-                    }
-                    
-                    selectedStream.getTracks().forEach(t => t.stop());
-                }
-                
-                stream.getTracks().forEach(t => t.stop());
-            } catch (err) {
-                console.log('Could not check camera capabilities:', err);
+            const label = device.label.toLowerCase();
+            if (label.includes('back') || label.includes('rear') || label.includes('environment')) {
+                selectedCamera = device;
+                console.log('Found back camera:', device.label);
+                break;
             }
         }
         
-        console.log('Selected highest resolution camera:', selectedCamera.label);
+        // If no back camera found, use first available
+        if (!selectedCamera) {
+            selectedCamera = devices[0];
+            console.log('No back camera found, using:', selectedCamera.label);
+        }
         
         // Config with full resolution scanning
         const config = {
