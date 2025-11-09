@@ -36,10 +36,21 @@ async function initScanner() {
     html5QrCode = new Html5Qrcode("scanner-container");
     
     try {
-        // Simple config for better performance
+        // Config with full resolution scanning
         const config = {
             fps: 20,
-            qrbox: { width: 250, height: 250 },
+            qrbox: function(viewfinderWidth, viewfinderHeight) {
+                // Use 90% of available space for scanning
+                return {
+                    width: Math.floor(viewfinderWidth * 0.9),
+                    height: Math.floor(viewfinderHeight * 0.9)
+                };
+            },
+            aspectRatio: 1.777778,
+            videoConstraints: {
+                width: { ideal: 4096 },
+                height: { ideal: 2160 }
+            },
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.UPC_A,
                 Html5QrcodeSupportedFormats.UPC_E,
