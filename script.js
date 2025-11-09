@@ -36,6 +36,40 @@ async function initScanner() {
     html5QrCode = new Html5Qrcode("scanner-container");
     
     try {
+        // Get all available cameras
+        const devices = await Html5Qrcode.getCameras();
+        
+        if (!devices || devices.length === 0) {
+            alert('No camera found on this device');
+            return;
+        }
+        
+        console.log('Available cameras:', devices);
+        
+        // Find back camera by looking for the LAST camera (typically back camera on mobile)
+        // or by checking labels
+        let backCamera = null;
+        
+        // First try to find by label
+        for (const device of devices) {
+            const label = device.label.toLowerCase();
+            console.log('Checking camera:', label);
+            if (label.includes('back') || label.includes('rear') || label.includes('environment') || label.includes('facing back')) {
+                backCamera = device;
+                console.log('Found back camera by label:', device.label);
+                break;
+            }
+        }
+        
+        // If not found by label, use the last camera (typically the back camera)
+        if (!backCamera && devices.length > 1) {
+            backCamera = devices[devices.length - 1];
+            console.log('Using last camera as back camera:', backCamera.label);
+        } else if (!backCamera) {
+            backCamera = devices[0];
+            console.log('Using first camera:', backCamera.label);
+        }
+        
         // Config with full resolution scanning
         const config = {
             fps: 20,
@@ -47,6 +81,11 @@ async function initScanner() {
                 };
             },
             aspectRatio: 1.777778,
+            videoConstraints: {
+                width: { ideal: 4096 },
+                height: { ideal: 2160 },
+                facingMode: { ideal: "environment" }
+            },
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.UPC_A,
                 Html5QrcodeSupportedFormats.UPC_E,
@@ -60,9 +99,10 @@ async function initScanner() {
             ]
         };
         
-        // Start with back camera using facingMode (most reliable method)
+        // Start with back camera ID
+        console.log('Starting camera:', backCamera.id, backCamera.label);
         await html5QrCode.start(
-            { facingMode: "environment" },
+            backCamera.id,
             config,
             onScanSuccess,
             onScanError
