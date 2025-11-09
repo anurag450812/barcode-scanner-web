@@ -1,18 +1,152 @@
-// Barcode Scanner Application with html5-qrcode
+// Barcode Scanner Application with Google Barcode Detection API
 let barcodeList = [];
 let isScanning = false;
 let isFlashOn = false;
 let currentStream = null;
 let html5QrCode = null;
+let barcodeDetector = null;
+let useNativeDetector = false;
+let videoElement = null;
+let animationId = null;
 
 // Load saved barcodes from localStorage on page load
 window.addEventListener('DOMContentLoaded', () => {
     loadBarcodes();
     updateDisplay();
+    
+    // Check if native Barcode Detection API is available
+    if ('BarcodeDetector' in window) {
+        useNativeDetector = true;
+        console.log('Using native Barcode Detection API');
+    } else {
+        console.log('Using html5-qrcode library');
+    }
 });
 
-// Initialize html5-qrcode barcode scanner
+// Initialize barcode scanner
 async function initScanner() {
+    document.getElementById('scanner-container').style.display = 'block';
+    document.getElementById('loading-message').style.display = 'block';
+    document.getElementById('scan-tip').style.display = 'none';
+    document.getElementById('toggle-flash').style.display = 'none';
+    
+    // If already scanning, resume
+    if (isScanning) {
+        document.getElementById('loading-message').style.display = 'none';
+        return;
+    }
+    
+    if (useNativeDetector) {
+        await initNativeScanner();
+    } else {
+        await initHtml5Scanner();
+    }
+}
+
+// Initialize native Barcode Detection API
+async function initNativeScanner() {
+    try {
+        // Create barcode detector with all 1D formats
+        barcodeDetector = new BarcodeDetector({
+            formats: ['code_128', 'code_39', 'code_93', 'codabar', 'ean_13', 'ean_8', 'itf', 'upc_a', 'upc_e']
+        });
+        
+        // Get back camera
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        
+        console.log('Available cameras:', videoDevices);
+        
+        let backCamera = null;
+        for (const device of videoDevices) {
+            const label = device.label.toLowerCase();
+            if (label.includes('back') || label.includes('rear') || label.includes('environment')) {
+                backCamera = device;
+                break;
+            }
+        }
+        
+        if (!backCamera && videoDevices.length > 1) {
+            backCamera = videoDevices[videoDevices.length - 1];
+        } else if (!backCamera) {
+            backCamera = videoDevices[0];
+        }
+        
+        console.log('Selected camera:', backCamera.label);
+        
+        // Start video stream
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                deviceId: backCamera.deviceId,
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
+                facingMode: 'environment'
+            }
+        });
+        
+        currentStream = stream;
+        
+        // Create video element
+        const container = document.getElementById('scanner-container');
+        container.innerHTML = '<video id="scanner-video" playsinline autoplay></video>';
+        videoElement = document.getElementById('scanner-video');
+        videoElement.srcObject = stream;
+        
+        // Wait for video to be ready
+        await new Promise((resolve) => {
+            videoElement.onloadedmetadata = () => {
+                videoElement.play();
+                resolve();
+            };
+        });
+        
+        // Hide loading after video is ready
+        setTimeout(() => {
+            document.getElementById('loading-message').style.display = 'none';
+            document.getElementById('scan-tip').style.display = 'block';
+            document.getElementById('toggle-flash').style.display = 'inline-block';
+        }, 500);
+        
+        isScanning = true;
+        
+        // Start scanning loop
+        scanBarcode();
+        
+    } catch (err) {
+        console.error('Error starting native scanner:', err);
+        document.getElementById('loading-message').style.display = 'none';
+        alert('Error starting camera: ' + err.message);
+    }
+}
+
+// Continuous barcode scanning loop
+async function scanBarcode() {
+    if (!isScanning || !videoElement) return;
+    
+    try {
+        const barcodes = await barcodeDetector.detect(videoElement);
+        
+        if (barcodes.length > 0) {
+            const barcode = barcodes[0];
+            const code = barcode.rawValue;
+            
+            // Validate barcode
+            if (!code.includes('.') && code.length >= 3) {
+                isScanning = false;
+                handleBarcodeScan(code);
+                return; // Stop scanning after detection
+            }
+        }
+    } catch (err) {
+        console.error('Detection error:', err);
+    }
+    
+    // Continue scanning
+    animationId = requestAnimationFrame(scanBarcode);
+}
+
+// Initialize html5-qrcode scanner (fallback)
+async function initHtml5Scanner() {
     document.getElementById('scanner-container').style.display = 'block';
     document.getElementById('loading-message').style.display = 'block';
     document.getElementById('scan-tip').style.display = 'none';
@@ -193,10 +327,34 @@ function handleBarcodeScan(code) {
 function resumeScanning() {
     isScanning = true;
     document.getElementById('start-scan').textContent = 'Pause';
+    
+    if (useNativeDetector && videoElement) {
+        scanBarcode(); // Restart scanning loop
+    }
 }
 
 // Stop the scanner
 async function stopScanner() {
+    isScanning = false;
+    
+    // Stop native scanner
+    if (useNativeDetector) {
+        if (animationId) {
+            cancelAnimationFrame(animationId);
+            animationId = null;
+        }
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+            currentStream = null;
+        }
+        if (videoElement) {
+            videoElement.srcObject = null;
+            videoElement = null;
+        }
+        document.getElementById('scanner-container').innerHTML = '';
+    }
+    
+    // Stop html5-qrcode scanner
     if (html5QrCode) {
         try {
             await html5QrCode.stop();
