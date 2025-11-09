@@ -759,3 +759,27 @@ document.getElementById('search-input').addEventListener('keyup', (e) => {
         searchBarcode();
     }
 });
+
+// Tab switching functionality
+function switchTab(tabName) {
+    // Remove active class from all tabs and content
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    // Add active class to selected tab and content
+    if (tabName === 'scan') {
+        document.getElementById('tab-scan').classList.add('active');
+        document.getElementById('scan-tab-content').classList.add('active');
+    } else if (tabName === 'list') {
+        document.getElementById('tab-list').classList.add('active');
+        document.getElementById('list-tab-content').classList.add('active');
+    }
+}
+
+// Add event listeners to tab buttons
+document.getElementById('tab-scan').addEventListener('click', () => switchTab('scan'));
+document.getElementById('tab-list').addEventListener('click', () => switchTab('list'));
+
+// Initialize with scan tab active
+switchTab('scan');
+

@@ -10,46 +10,58 @@
     <div class="container">
         <h1>📷 Barcode Scanner</h1>
         
-        <!-- Scanner Section -->
-        <div class="scanner-section">
-            <div id="scanner-container"></div>
-            <div id="loading-message" class="loading-message" style="display: none;">
-                <div class="loader"></div>
-                <p>Loading camera...</p>
-            </div>
-            <div id="scan-tip" class="scan-tip" style="display: none;">
-                💡 <strong>Tip:</strong> Scanning 1D barcodes only. Point camera at barcode with good lighting.
-            </div>
-            <div class="scanner-controls">
-                <button id="start-scan" class="btn btn-primary">Start Scanning</button>
-                <button id="stop-scan" class="btn btn-secondary" style="display: none;">Close Camera</button>
-                <button id="toggle-flash" class="btn btn-warning" style="display: none;">🔦 Flash OFF</button>
-            </div>
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button id="tab-scan" class="tab-btn active">📸 Scan</button>
+            <button id="tab-list" class="tab-btn">📋 List</button>
         </div>
 
-        <!-- Last Scanned Result -->
-        <div id="result-section" style="display: none;">
-            <h3>Last Scanned:</h3>
-            <p id="last-result"></p>
-        </div>
-
-        <!-- Search Section -->
-        <div class="search-section">
-            <input type="text" id="search-input" placeholder="Search for a barcode...">
-            <button id="search-btn" class="btn btn-info">Search</button>
-        </div>
-
-        <!-- Barcode List Section -->
-        <div class="list-section">
-            <div class="list-header">
-                <h2>Scanned Barcodes (<span id="count">0</span>)</h2>
-                <div class="list-actions">
-                    <button id="delete-selected" class="btn btn-danger" style="display: none;">Delete Selected</button>
-                    <button id="clear-list" class="btn btn-danger">Clear All</button>
+        <!-- Scan Tab Content -->
+        <div id="scan-tab-content" class="tab-content active">
+            <!-- Scanner Section -->
+            <div class="scanner-section">
+                <div id="scanner-container"></div>
+                <div id="loading-message" class="loading-message" style="display: none;">
+                    <div class="loader"></div>
+                    <p>Loading camera...</p>
+                </div>
+                <div id="scan-tip" class="scan-tip" style="display: none;">
+                    💡 <strong>Tip:</strong> Scanning 1D barcodes only. Point camera at barcode with good lighting.
+                </div>
+                <div class="scanner-controls">
+                    <button id="start-scan" class="btn btn-primary">Start Scanning</button>
+                    <button id="stop-scan" class="btn btn-secondary" style="display: none;">Close Camera</button>
+                    <button id="toggle-flash" class="btn btn-warning" style="display: none;">🔦 Flash OFF</button>
                 </div>
             </div>
-            <ul id="barcode-list"></ul>
-            <p id="empty-message" class="empty-message">No barcodes scanned yet. Start scanning to add items!</p>
+
+            <!-- Last Scanned Result -->
+            <div id="result-section" style="display: none;">
+                <h3>Last Scanned:</h3>
+                <p id="last-result"></p>
+            </div>
+        </div>
+
+        <!-- List Tab Content -->
+        <div id="list-tab-content" class="tab-content">
+            <!-- Search Section -->
+            <div class="search-section">
+                <input type="text" id="search-input" placeholder="Search for a barcode...">
+                <button id="search-btn" class="btn btn-info">Search</button>
+            </div>
+
+            <!-- Barcode List Section -->
+            <div class="list-section">
+                <div class="list-header">
+                    <h2>Scanned Barcodes (<span id="count">0</span>)</h2>
+                    <div class="list-actions">
+                        <button id="delete-selected" class="btn btn-danger" style="display: none;">Delete Selected</button>
+                        <button id="clear-list" class="btn btn-danger">Clear All</button>
+                    </div>
+                </div>
+                <ul id="barcode-list"></ul>
+                <p id="empty-message" class="empty-message">No barcodes scanned yet. Start scanning to add items!</p>
+            </div>
         </div>
     </div>
 
