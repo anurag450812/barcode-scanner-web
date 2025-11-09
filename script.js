@@ -46,6 +46,12 @@ async function initScanner() {
         
         console.log('Available cameras:', devices);
         
+        // Show available cameras on screen
+        let cameraInfo = 'Available cameras:\n';
+        devices.forEach((d, i) => {
+            cameraInfo += `${i + 1}. ${d.label}\n`;
+        });
+        
         // Find back camera by looking for the LAST camera (typically back camera on mobile)
         // or by checking labels
         let backCamera = null;
@@ -69,6 +75,10 @@ async function initScanner() {
             backCamera = devices[0];
             console.log('Using first camera:', backCamera.label);
         }
+        
+        // Show selected camera on screen
+        cameraInfo += `\nSelected: ${backCamera.label}`;
+        alert(cameraInfo);
         
         // Config with full resolution scanning
         const config = {
