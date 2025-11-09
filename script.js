@@ -68,6 +68,7 @@ async function initScanner() {
             },
             aspectRatio: 1.777778,
             videoConstraints: {
+                facingMode: { exact: "environment" },
                 focusMode: { ideal: "continuous" },
                 width: { ideal: 1920 },
                 height: { ideal: 1080 }
