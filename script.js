@@ -471,11 +471,41 @@ function clearAllBarcodes() {
 }
 
 // Search for barcode
+// Categorize barcode by prefix
+function categorizeBarcode(code) {
+    if (code.startsWith('FM')) return { name: 'Flipkart', order: 1 };
+    if (code.startsWith('VL')) return { name: 'Valmo', order: 2 };
+    if (code.startsWith('SF')) return { name: 'Shadowfax', order: 3 };
+    if (code.startsWith('13')) return { name: 'XpressBees', order: 4 };
+    if (code.startsWith('14')) return { name: 'Delhivery', order: 5 };
+    if (code.startsWith('36')) return { name: 'Amazon', order: 6 };
+    return { name: 'Others', order: 7 };
+}
+
+// Group barcodes by category
+function groupBarcodes(barcodes) {
+    const groups = {};
+    
+    barcodes.forEach((item, index) => {
+        const category = categorizeBarcode(item.code);
+        if (!groups[category.name]) {
+            groups[category.name] = {
+                items: [],
+                order: category.order
+            };
+        }
+        groups[category.name].items.push({ ...item, originalIndex: index });
+    });
+    
+    // Sort groups by order
+    return Object.entries(groups).sort((a, b) => a[1].order - b[1].order);
+}
+
 function searchBarcode() {
     const searchTerm = document.getElementById('search-input').value.trim();
     
     if (!searchTerm) {
-        updateDisplay(); // Show all if search is empty
+        updateDisplay(); // Show all with groups if search is empty
         return;
     }
     
@@ -495,8 +525,10 @@ function searchBarcode() {
         emptyMessage.style.display = 'none';
         listElement.innerHTML = '';
         
-        filteredBarcodes.forEach((item, index) => {
-            const li = createBarcodeListItem(item, barcodeList.indexOf(item));
+        // Show search results WITHOUT groups
+        filteredBarcodes.forEach((item) => {
+            const originalIndex = barcodeList.indexOf(item);
+            const li = createBarcodeListItem(item, originalIndex);
             li.classList.add('highlight');
             listElement.appendChild(li);
         });
@@ -601,9 +633,25 @@ function updateDisplay() {
         emptyMessage.style.display = 'none';
         listElement.innerHTML = '';
         
-        barcodeList.forEach((item, index) => {
-            const li = createBarcodeListItem(item, index);
-            listElement.appendChild(li);
+        // Group barcodes by category
+        const groupedBarcodes = groupBarcodes(barcodeList);
+        
+        groupedBarcodes.forEach(([groupName, groupData]) => {
+            // Create group header
+            const groupHeader = document.createElement('li');
+            groupHeader.className = 'group-header';
+            groupHeader.innerHTML = `
+                <strong>${groupName} Group</strong>
+                <span class="group-count">(${groupData.items.length})</span>
+            `;
+            listElement.appendChild(groupHeader);
+            
+            // Add items in this group
+            groupData.items.forEach((item) => {
+                const li = createBarcodeListItem(item, item.originalIndex);
+                li.classList.add('grouped-item');
+                listElement.appendChild(li);
+            });
         });
     }
 }
