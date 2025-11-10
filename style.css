@@ -189,6 +189,12 @@ h1 {
     background: #e53e3e;
 }
 
+#back-to-groups {
+    cursor: pointer;
+    z-index: 100;
+    pointer-events: auto;
+}
+
 .btn-info {
     background: #48bb78;
     color: white;

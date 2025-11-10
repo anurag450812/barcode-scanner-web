@@ -869,9 +869,17 @@ document.getElementById('delete-selected').addEventListener('click', deleteSelec
 document.getElementById('search-input').addEventListener('input', searchBarcode);
 
 // Back to groups button
-document.getElementById('back-to-groups').addEventListener('click', () => {
-    updateDisplay(true);
-});
+const backButton = document.getElementById('back-to-groups');
+if (backButton) {
+    backButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Back button clicked');
+        currentGroup = null;
+        document.getElementById('search-input').value = '';
+        updateDisplay(true);
+    });
+}
 
 // Tab switching functionality
 function switchTab(tabName) {
