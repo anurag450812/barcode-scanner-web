@@ -458,9 +458,9 @@ document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'back-to-groups') {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Back button clicked - reloading page');
+        console.log('Back button clicked - returning to list');
         localStorage.removeItem('currentGroup');
         localStorage.removeItem('searchTerm');
-        window.location.reload();
+        window.location.href = 'list.html';
     }
 });
