@@ -737,15 +737,15 @@ async function loadBarcodes() {
             barcodeList = data || [];
             
             // Preserve current view when reloading
+            const searchTerm = document.getElementById('search-input').value.trim();
+            console.log('loadBarcodes - currentGroup:', currentGroup, 'searchTerm:', searchTerm);
+            
             if (currentGroup) {
                 showGroupItems(currentGroup, false);
+            } else if (searchTerm) {
+                searchBarcode();
             } else {
-                const searchTerm = document.getElementById('search-input').value.trim();
-                if (searchTerm) {
-                    searchBarcode();
-                } else {
-                    updateDisplay(false);
-                }
+                updateDisplay(false);
             }
         }
     } catch (err) {
@@ -868,18 +868,17 @@ document.getElementById('delete-selected').addEventListener('click', deleteSelec
 // Real-time search as user types
 document.getElementById('search-input').addEventListener('input', searchBarcode);
 
-// Back to groups button
-const backButton = document.getElementById('back-to-groups');
-if (backButton) {
-    backButton.addEventListener('click', (e) => {
+// Back to groups button - use event delegation on parent
+document.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'back-to-groups') {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Back button clicked');
+        console.log('Back button clicked via delegation');
         currentGroup = null;
         document.getElementById('search-input').value = '';
         updateDisplay(true);
-    });
-}
+    }
+});
 
 // Tab switching functionality
 function switchTab(tabName) {
