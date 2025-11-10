@@ -891,20 +891,6 @@ document.getElementById('delete-selected').addEventListener('click', deleteSelec
 // Real-time search as user types
 document.getElementById('search-input').addEventListener('input', searchBarcode);
 
-// Refresh button to manually sync
-document.getElementById('refresh-list').addEventListener('click', async () => {
-    const refreshBtn = document.getElementById('refresh-list');
-    refreshBtn.disabled = true;
-    refreshBtn.textContent = '⏳';
-    
-    await loadBarcodes();
-    
-    setTimeout(() => {
-        refreshBtn.disabled = false;
-        refreshBtn.textContent = '🔄';
-    }, 500);
-});
-
 // Back to groups button - reload the page
 document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'back-to-groups') {

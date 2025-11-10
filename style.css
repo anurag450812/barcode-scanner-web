@@ -252,13 +252,10 @@ h1 {
 /* Search Section */
 .search-section {
     margin-bottom: 25px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
 }
 
 #search-input {
-    flex: 1;
+    width: 100%;
     padding: 14px 20px;
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 10px;
@@ -277,13 +274,6 @@ h1 {
     border-color: #667eea;
     background: rgba(255, 255, 255, 1);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-}
-
-#refresh-list {
-    padding: 14px 20px;
-    font-size: 20px;
-    min-width: 60px;
-    flex-shrink: 0;
 }
 
 /* List Section */
