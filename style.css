@@ -27,43 +27,7 @@ h1 {
     font-size: 2.5em;
 }
 
-/* Page Navigation */
-.page-navigation {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 6px;
-    border-radius: 10px;
-}
-
-.nav-btn {
-    flex: 1;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 8px;
-    font-size: 18px;
-    font-weight: bold;
-    text-align: center;
-    text-decoration: none;
-    cursor: pointer;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    transition: all 0.3s ease;
-    display: block;
-}
-
-.nav-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.05);
-}
-
-.nav-btn.active {
-    background: #667eea;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-/* Old tab styles - keep for backward compatibility */
+/* Tab Navigation */
 .tab-navigation {
     display: flex;
     gap: 8px;
@@ -288,10 +252,13 @@ h1 {
 /* Search Section */
 .search-section {
     margin-bottom: 25px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 #search-input {
-    width: 100%;
+    flex: 1;
     padding: 14px 20px;
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 10px;
@@ -310,6 +277,13 @@ h1 {
     border-color: #667eea;
     background: rgba(255, 255, 255, 1);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+#refresh-list {
+    padding: 14px 20px;
+    font-size: 20px;
+    min-width: 60px;
+    flex-shrink: 0;
 }
 
 /* List Section */
