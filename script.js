@@ -13,11 +13,26 @@ let refreshInterval = null;
 
 // Load saved barcodes from Netlify Blobs on page load
 window.addEventListener('DOMContentLoaded', () => {
+    // Restore active tab from localStorage
+    const savedTab = localStorage.getItem('activeTab') || 'scan';
+    switchTab(savedTab);
+    
+    // Restore search term and current group
+    const savedSearch = localStorage.getItem('searchTerm') || '';
+    const savedGroup = localStorage.getItem('currentGroup') || '';
+    
+    if (savedSearch) {
+        document.getElementById('search-input').value = savedSearch;
+    }
+    if (savedGroup) {
+        currentGroup = savedGroup;
+    }
+    
     loadBarcodes();
     
-    // Auto-refresh every 3 seconds to sync with cloud
+    // Auto-refresh every 3 seconds to sync with cloud (but don't reload during search)
     refreshInterval = setInterval(() => {
-        if (!isScanning) {
+        if (!isScanning && !document.getElementById('search-input').value.trim()) {
             loadBarcodes();
         }
     }, 3000);
@@ -507,8 +522,12 @@ function searchBarcode() {
     const listElement = document.getElementById('barcode-list');
     const emptyMessage = document.getElementById('empty-message');
     
+    // Save search term to localStorage
+    localStorage.setItem('searchTerm', searchTerm);
+    
     if (!searchTerm) {
         // If no search term, show appropriate view (groups or group items)
+        localStorage.removeItem('searchTerm');
         if (currentGroup) {
             showGroupItems(currentGroup, false);
         } else {
@@ -642,10 +661,12 @@ function updateDisplay(clearSearch = true) {
     // Clear search input only if requested
     if (clearSearch) {
         document.getElementById('search-input').value = '';
+        localStorage.removeItem('searchTerm');
     }
     
     // Reset to groups view
     currentGroup = null;
+    localStorage.removeItem('currentGroup');
     backButton.style.display = 'none';
     listTitle.innerHTML = 'Scanned Barcodes (<span id="count">' + barcodeList.length + '</span>)';
     
@@ -685,12 +706,14 @@ function showGroupItems(groupName, clearSearch = true) {
     const backButton = document.getElementById('back-to-groups');
     
     currentGroup = groupName;
+    localStorage.setItem('currentGroup', groupName);
     backButton.style.display = 'block';
     listTitle.textContent = `${groupName} Group`;
     
     // Clear search input only if requested
     if (clearSearch) {
         document.getElementById('search-input').value = '';
+        localStorage.removeItem('searchTerm');
     }
     
     // Filter barcodes for this group
@@ -868,15 +891,16 @@ document.getElementById('delete-selected').addEventListener('click', deleteSelec
 // Real-time search as user types
 document.getElementById('search-input').addEventListener('input', searchBarcode);
 
-// Back to groups button - use event delegation on parent
+// Back to groups button - reload the page
 document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'back-to-groups') {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Back button clicked via delegation');
-        currentGroup = null;
-        document.getElementById('search-input').value = '';
-        updateDisplay(true);
+        console.log('Back button clicked - reloading page');
+        localStorage.removeItem('currentGroup');
+        localStorage.removeItem('searchTerm');
+        localStorage.setItem('activeTab', 'list');
+        window.location.reload();
     }
 });
 
@@ -885,6 +909,9 @@ function switchTab(tabName) {
     // Remove active class from all tabs and content
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    // Save active tab to localStorage
+    localStorage.setItem('activeTab', tabName);
     
     // Add active class to selected tab and content
     if (tabName === 'scan') {
