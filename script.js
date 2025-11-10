@@ -8,6 +8,7 @@ let barcodeDetector = null;
 let useNativeDetector = false;
 let videoElement = null;
 let animationId = null;
+let currentGroup = null; // Track which group is currently being viewed
 let refreshInterval = null;
 
 // Load saved barcodes from Netlify Blobs on page load
@@ -503,17 +504,31 @@ function groupBarcodes(barcodes) {
 
 function searchBarcode() {
     const searchTerm = document.getElementById('search-input').value.trim();
-    
-    if (!searchTerm) {
-        updateDisplay(); // Show all with groups if search is empty
-        return;
-    }
-    
     const listElement = document.getElementById('barcode-list');
     const emptyMessage = document.getElementById('empty-message');
     
+    if (!searchTerm) {
+        // If no search term, show appropriate view (groups or group items)
+        if (currentGroup) {
+            showGroupItems(currentGroup);
+        } else {
+            updateDisplay();
+        }
+        return;
+    }
+    
+    // Determine which barcodes to search in
+    let barcodesToSearch = barcodeList;
+    if (currentGroup) {
+        // If inside a group, only search within that group
+        barcodesToSearch = barcodeList.filter(item => {
+            const category = categorizeBarcode(item.code);
+            return category.name === currentGroup;
+        });
+    }
+    
     // Filter barcodes that match search term
-    const filteredBarcodes = barcodeList.filter(item => 
+    const filteredBarcodes = barcodesToSearch.filter(item => 
         item.code.toLowerCase().includes(searchTerm.toLowerCase())
     );
     
@@ -618,12 +633,19 @@ function updateDisplay() {
     const listElement = document.getElementById('barcode-list');
     const emptyMessage = document.getElementById('empty-message');
     const countElement = document.getElementById('count');
+    const listTitle = document.getElementById('list-title');
+    const backButton = document.getElementById('back-to-groups');
     
     // Update count
     countElement.textContent = barcodeList.length;
     
     // Clear search input
     document.getElementById('search-input').value = '';
+    
+    // Reset to groups view
+    currentGroup = null;
+    backButton.style.display = 'none';
+    listTitle.innerHTML = 'Scanned Barcodes (<span id="count">' + barcodeList.length + '</span>)';
     
     if (barcodeList.length === 0) {
         listElement.innerHTML = '';
@@ -637,21 +659,54 @@ function updateDisplay() {
         const groupedBarcodes = groupBarcodes(barcodeList);
         
         groupedBarcodes.forEach(([groupName, groupData]) => {
-            // Create group header
-            const groupHeader = document.createElement('li');
-            groupHeader.className = 'group-header';
-            groupHeader.innerHTML = `
-                <strong>${groupName} Group</strong>
-                <span class="group-count">(${groupData.items.length})</span>
+            // Create clickable group card
+            const groupCard = document.createElement('li');
+            groupCard.className = 'group-card';
+            groupCard.innerHTML = `
+                <div class="group-card-content">
+                    <strong>${groupName} Group</strong>
+                    <span class="group-count">${groupData.items.length} items</span>
+                </div>
+                <span class="group-arrow">→</span>
             `;
-            listElement.appendChild(groupHeader);
-            
-            // Add items in this group
-            groupData.items.forEach((item) => {
-                const li = createBarcodeListItem(item, item.originalIndex);
-                li.classList.add('grouped-item');
-                listElement.appendChild(li);
-            });
+            groupCard.onclick = () => showGroupItems(groupName);
+            listElement.appendChild(groupCard);
+        });
+    }
+}
+
+// Show items within a specific group
+function showGroupItems(groupName) {
+    const listElement = document.getElementById('barcode-list');
+    const emptyMessage = document.getElementById('empty-message');
+    const listTitle = document.getElementById('list-title');
+    const backButton = document.getElementById('back-to-groups');
+    
+    currentGroup = groupName;
+    backButton.style.display = 'block';
+    listTitle.textContent = `${groupName} Group`;
+    
+    // Clear search input
+    document.getElementById('search-input').value = '';
+    
+    // Filter barcodes for this group
+    const groupBarcodes = barcodeList.filter(item => {
+        const category = categorizeBarcode(item.code);
+        return category.name === groupName;
+    });
+    
+    if (groupBarcodes.length === 0) {
+        listElement.innerHTML = '';
+        emptyMessage.style.display = 'block';
+        emptyMessage.textContent = 'No barcodes in this group.';
+    } else {
+        emptyMessage.style.display = 'none';
+        listElement.innerHTML = '';
+        
+        groupBarcodes.forEach((item) => {
+            const originalIndex = barcodeList.indexOf(item);
+            const li = createBarcodeListItem(item, originalIndex);
+            listElement.appendChild(li);
         });
     }
 }
@@ -797,6 +852,9 @@ document.getElementById('delete-selected').addEventListener('click', deleteSelec
 
 // Real-time search as user types
 document.getElementById('search-input').addEventListener('input', searchBarcode);
+
+// Back to groups button
+document.getElementById('back-to-groups').addEventListener('click', updateDisplay);
 
 // Tab switching functionality
 function switchTab(tabName) {

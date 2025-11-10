@@ -42,6 +42,11 @@
 
         <!-- List Tab Content -->
         <div id="list-tab-content" class="tab-content">
+            <!-- Back Button (hidden by default) -->
+            <button id="back-to-groups" class="btn btn-secondary" style="display: none; margin-bottom: 15px;">
+                ← Back to Groups
+            </button>
+            
             <!-- Search Section -->
             <div class="search-section">
                 <input type="tel" id="search-input" placeholder="🔍 Search barcodes..." inputmode="numeric" pattern="[0-9]*">
@@ -50,7 +55,7 @@
             <!-- Barcode List Section -->
             <div class="list-section">
                 <div class="list-header">
-                    <h2>Scanned Barcodes (<span id="count">0</span>)</h2>
+                    <h2 id="list-title">Scanned Barcodes (<span id="count">0</span>)</h2>
                     <div class="list-actions">
                         <button id="delete-selected" class="btn btn-danger" style="display: none;">Delete Selected</button>
                         <button id="clear-list" class="btn btn-danger">Clear All</button>

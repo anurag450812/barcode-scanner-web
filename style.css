@@ -333,6 +333,52 @@ h1 {
     border-left-color: #1890ff;
 }
 
+/* Group Cards */
+.group-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    padding: 20px 25px !important;
+    margin: 10px 0 !important;
+    border-radius: 12px !important;
+    border: none !important;
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.group-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.group-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.group-card-content strong {
+    font-size: 18px;
+}
+
+.group-count {
+    background: rgba(255, 255, 255, 0.3);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: normal;
+    display: inline-block;
+    width: fit-content;
+}
+
+.group-arrow {
+    font-size: 24px;
+    font-weight: bold;
+}
+
 /* Group Headers */
 .group-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
@@ -351,14 +397,6 @@ h1 {
 
 .group-header:first-child {
     margin-top: 0 !important;
-}
-
-.group-count {
-    background: rgba(255, 255, 255, 0.3);
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: bold;
 }
 
 .grouped-item {
