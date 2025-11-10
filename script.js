@@ -510,9 +510,9 @@ function searchBarcode() {
     if (!searchTerm) {
         // If no search term, show appropriate view (groups or group items)
         if (currentGroup) {
-            showGroupItems(currentGroup);
+            showGroupItems(currentGroup, false);
         } else {
-            updateDisplay();
+            updateDisplay(false);
         }
         return;
     }
@@ -629,7 +629,7 @@ function deleteSelectedBarcodes() {
 }
 
 // Update display
-function updateDisplay() {
+function updateDisplay(clearSearch = true) {
     const listElement = document.getElementById('barcode-list');
     const emptyMessage = document.getElementById('empty-message');
     const countElement = document.getElementById('count');
@@ -639,8 +639,10 @@ function updateDisplay() {
     // Update count
     countElement.textContent = barcodeList.length;
     
-    // Clear search input
-    document.getElementById('search-input').value = '';
+    // Clear search input only if requested
+    if (clearSearch) {
+        document.getElementById('search-input').value = '';
+    }
     
     // Reset to groups view
     currentGroup = null;
@@ -676,7 +678,7 @@ function updateDisplay() {
 }
 
 // Show items within a specific group
-function showGroupItems(groupName) {
+function showGroupItems(groupName, clearSearch = true) {
     const listElement = document.getElementById('barcode-list');
     const emptyMessage = document.getElementById('empty-message');
     const listTitle = document.getElementById('list-title');
@@ -686,8 +688,10 @@ function showGroupItems(groupName) {
     backButton.style.display = 'block';
     listTitle.textContent = `${groupName} Group`;
     
-    // Clear search input
-    document.getElementById('search-input').value = '';
+    // Clear search input only if requested
+    if (clearSearch) {
+        document.getElementById('search-input').value = '';
+    }
     
     // Filter barcodes for this group
     const groupBarcodes = barcodeList.filter(item => {
@@ -731,7 +735,18 @@ async function loadBarcodes() {
         if (response.ok) {
             const data = await response.json();
             barcodeList = data || [];
-            updateDisplay();
+            
+            // Preserve current view when reloading
+            if (currentGroup) {
+                showGroupItems(currentGroup, false);
+            } else {
+                const searchTerm = document.getElementById('search-input').value.trim();
+                if (searchTerm) {
+                    searchBarcode();
+                } else {
+                    updateDisplay(false);
+                }
+            }
         }
     } catch (err) {
         console.error('Error loading barcodes:', err);
@@ -854,7 +869,9 @@ document.getElementById('delete-selected').addEventListener('click', deleteSelec
 document.getElementById('search-input').addEventListener('input', searchBarcode);
 
 // Back to groups button
-document.getElementById('back-to-groups').addEventListener('click', updateDisplay);
+document.getElementById('back-to-groups').addEventListener('click', () => {
+    updateDisplay(true);
+});
 
 // Tab switching functionality
 function switchTab(tabName) {
