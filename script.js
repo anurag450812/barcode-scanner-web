@@ -330,6 +330,18 @@ function onScanError(errorMessage) {
 function handleBarcodeScan(code) {
     if (!code) return;
     
+    // Check if barcode matches any group criteria (reject "Others")
+    const category = categorizeBarcode(code);
+    if (category.name === 'Others') {
+        // Play denial sound for invalid barcode
+        playDenialSound();
+        showNotification('❌ INVALID BARCODE! This barcode does not match any courier service.', true);
+        
+        // Update UI
+        document.getElementById('start-scan').textContent = 'Scan Next';
+        return;
+    }
+    
     // Check if barcode already exists
     const exists = barcodeList.some(item => item.code === code);
     
