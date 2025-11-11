@@ -350,12 +350,25 @@ function handleBarcodeScan(code) {
     if (!exists) {
         // Play sound immediately for instant feedback
         playBeep();
-        addBarcode(code);
-        showNotification('✅ Barcode Saved! Click "Scan Next" to continue.', false);
+        
+        // Add to list and update count immediately
+        const barcodeItem = {
+            code: code,
+            timestamp: new Date().toLocaleString()
+        };
+        barcodeList.unshift(barcodeItem);
+        
+        // Update count immediately for instant feedback
+        updateAllCounts();
+        
+        // Save and update display asynchronously
+        saveBarcodes();
+        
+        showNotification('', false);
     } else {
         // Play denial sound immediately
         playDenialSound();
-        showNotification('❌ ALREADY SCANNED! This barcode is already in your list.', true);
+        showNotification('', true);
     }
     
     // Update UI
@@ -879,34 +892,49 @@ function showNotification(message, isError = false) {
         document.body.appendChild(notification);
     }
     
-    // Set styling based on whether it's an error or success
+    // Simple icon-based notification
+    const icon = isError ? '❌' : '✅';
     const backgroundColor = isError ? '#dc3545' : '#48bb78';
-    const fontSize = isError ? '18px' : '16px';
+    
     notification.style.cssText = `
         position: fixed;
-        top: 20px;
+        top: 80px;
         left: 50%;
         transform: translateX(-50%);
         background: ${backgroundColor};
         color: white;
-        padding: 15px 30px;
-        border-radius: 8px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         z-index: 1000;
-        font-weight: bold;
-        display: block;
-        max-width: 90%;
-        text-align: center;
-        font-size: ${fontSize};
-        animation: slideDown 0.3s ease-out;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        animation: popIn 0.3s ease-out;
     `;
     
-    notification.textContent = message;
+    notification.textContent = icon;
     
-    // Auto-hide after 3 seconds
+    // Auto-hide after 1 second
     setTimeout(() => {
         notification.style.display = 'none';
-    }, 3000);
+    }, 1000);
+}
+
+// Add CSS animation
+if (!document.getElementById('notification-styles')) {
+    const style = document.createElement('style');
+    style.id = 'notification-styles';
+    style.textContent = `
+        @keyframes popIn {
+            0% { transform: translateX(-50%) scale(0); }
+            50% { transform: translateX(-50%) scale(1.1); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+    `;
+    document.head.appendChild(style);
 }
 
 // Event Listeners
