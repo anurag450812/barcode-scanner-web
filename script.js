@@ -472,6 +472,7 @@ function addBarcode(code) {
     barcodeList.unshift(barcodeItem); // Add to beginning of list
     saveBarcodes();
     updateDisplay();
+    updateAllCounts();
 }
 
 // Delete individual barcode
@@ -482,6 +483,7 @@ function deleteBarcode(index) {
         barcodeList.splice(index, 1);
         saveBarcodes();
         updateDisplay();
+        updateAllCounts();
     }
 }
 
@@ -496,6 +498,7 @@ function clearAllBarcodes() {
         barcodeList = [];
         saveBarcodes();
         updateDisplay();
+        updateAllCounts();
         document.getElementById('result-section').style.display = 'none';
     }
 }
@@ -510,6 +513,31 @@ function categorizeBarcode(code) {
     if (code.startsWith('14')) return { name: 'Delhivery', order: 5 };
     if (code.startsWith('36')) return { name: 'Amazon', order: 6 };
     return { name: 'Others', order: 7 };
+}
+
+// Get count of valid barcodes (excluding "Others" group)
+function getValidBarcodeCount() {
+    return barcodeList.filter(item => {
+        const category = categorizeBarcode(item.code);
+        return category.name !== 'Others';
+    }).length;
+}
+
+// Update all count displays
+function updateAllCounts() {
+    const validCount = getValidBarcodeCount();
+    
+    // Update list page count
+    const countElement = document.getElementById('count');
+    if (countElement) {
+        countElement.textContent = validCount;
+    }
+    
+    // Update scan page count
+    const scanCountElement = document.getElementById('scan-count');
+    if (scanCountElement) {
+        scanCountElement.textContent = validCount;
+    }
 }
 
 // Group barcodes by category
@@ -657,6 +685,7 @@ function deleteSelectedBarcodes() {
         
         saveBarcodes();
         updateDisplay();
+        updateAllCounts();
         document.getElementById('delete-selected').style.display = 'none';
     }
 }
@@ -665,12 +694,11 @@ function deleteSelectedBarcodes() {
 function updateDisplay(clearSearch = true) {
     const listElement = document.getElementById('barcode-list');
     const emptyMessage = document.getElementById('empty-message');
-    const countElement = document.getElementById('count');
     const listTitle = document.getElementById('list-title');
     const backButton = document.getElementById('back-to-groups');
     
-    // Update count
-    countElement.textContent = barcodeList.length;
+    // Update counts
+    updateAllCounts();
     
     // Clear search input only if requested
     if (clearSearch) {
@@ -682,7 +710,7 @@ function updateDisplay(clearSearch = true) {
     currentGroup = null;
     localStorage.removeItem('currentGroup');
     backButton.style.display = 'none';
-    listTitle.innerHTML = 'Scanned Barcodes (<span id="count">' + barcodeList.length + '</span>)';
+    listTitle.innerHTML = 'Scanned Barcodes (<span id="count">' + getValidBarcodeCount() + '</span>)';
     
     if (barcodeList.length === 0) {
         listElement.innerHTML = '';
@@ -772,6 +800,9 @@ async function loadBarcodes() {
         if (response.ok) {
             const data = await response.json();
             barcodeList = data || [];
+            
+            // Update counts
+            updateAllCounts();
             
             // Preserve current view when reloading
             const searchTerm = document.getElementById('search-input').value.trim();

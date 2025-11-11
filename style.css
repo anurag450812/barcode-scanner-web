@@ -68,6 +68,24 @@ h1 {
     display: block;
 }
 
+/* Total Count Badge */
+.total-count-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.total-count-badge span {
+    font-size: 24px;
+    color: #ffd700;
+}
+
 /* Scanner Section */
 .scanner-section {
     text-align: center;
