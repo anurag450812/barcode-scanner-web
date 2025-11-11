@@ -153,11 +153,17 @@ async function scanBarcode() {
             const barcode = barcodes[0];
             const code = barcode.rawValue;
             
-            // Validate barcode
+            // Validate barcode format
             if (!code.includes('.') && code.length >= 3) {
-                isScanning = false;
-                handleBarcodeScan(code);
-                return; // Stop scanning after detection
+                // Check if barcode matches group criteria before stopping scanner
+                const category = categorizeBarcode(code);
+                if (category.name !== 'Others') {
+                    // Valid barcode - stop scanning and handle it
+                    isScanning = false;
+                    handleBarcodeScan(code);
+                    return; // Stop scanning after valid detection
+                }
+                // Invalid barcode - continue scanning without stopping
             }
         }
     } catch (err) {
@@ -305,12 +311,19 @@ async function initHtml5Scanner() {
 function onScanSuccess(decodedText, decodedResult) {
     if (!isScanning) return;
     
-    // Validate barcode
+    // Validate barcode format
     if (decodedText.includes('.') || decodedText.length < 3) {
         return;
     }
     
-    // Stop scanning temporarily
+    // Check if barcode matches group criteria before stopping scanner
+    const category = categorizeBarcode(decodedText);
+    if (category.name === 'Others') {
+        // Invalid barcode - continue scanning without stopping
+        return;
+    }
+    
+    // Valid barcode - stop scanning and handle it
     isScanning = false;
     
     // Handle the scanned barcode
@@ -330,13 +343,7 @@ function onScanError(errorMessage) {
 function handleBarcodeScan(code) {
     if (!code) return;
     
-    // Check if barcode matches any group criteria (silently reject "Others")
-    const category = categorizeBarcode(code);
-    if (category.name === 'Others') {
-        // Silently ignore invalid barcodes - don't save, don't show error, just continue scanning
-        return;
-    }
-    
+    // At this point, barcode is already validated by the scanner functions
     // Check if barcode already exists
     const exists = barcodeList.some(item => item.code === code);
     
